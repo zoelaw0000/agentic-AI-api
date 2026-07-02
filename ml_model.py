@@ -8,7 +8,17 @@ MODEL_PATH = "readmitted_model_compressed.pkl"
 
 PREDICTION_THRESHOLD = 0.13
 
-model = joblib.load(MODEL_PATH)
+model = None
+
+def get_model():
+    global model
+
+    if model is None:
+        print("Loading model...")
+        model = joblib.load(MODEL_PATH)
+        print("Model loaded.")
+
+    return model
 
 
 def prepare_prediction_data(df):
@@ -35,6 +45,8 @@ def prepare_prediction_data(df):
 def predict_batch(df):
 
     prediction_df = prepare_prediction_data(df)
+
+    model = get_model()
 
     probabilities = model.predict_proba(
         prediction_df
