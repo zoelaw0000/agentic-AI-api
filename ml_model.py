@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 import joblib
-from sqlalchemy import create_engine
-from config import DATABASE_URL
 
 MODEL_PATH = "readmitted_model_compressed.pkl"
 

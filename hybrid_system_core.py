@@ -1,7 +1,4 @@
-import ollama
 import pandas as pd
-import joblib
-import json
 import re
 import plotly.express as px
 from sqlalchemy import create_engine
@@ -9,45 +6,6 @@ from config import DATABASE_URL
 
 # Database connection
 engine = create_engine(DATABASE_URL)
-
-# Intent Classification
-def classify_intent(question):
-    prompt = f"""
-You are an intent classifier for a medical analytics system.
-
-Classify the query into ONE of the two categories:
-
-SQL:
-- Descriptive queries
-- Aggregations (count, average, sum)
-- Listing or filtering records
-- Historical analysis
-- Filtering
-- Database queries
-
-PREDICTION:
-- Forecasting
-- Risk estimation
-- Future outcome prediction
-- Probability estimation
-
-Respond with ONLY one word: SQL or PREDICTION.
-
-Query:
-{question}
-"""
-    response = ollama.chat(
-        model="llama3.1:8b",
-        messages=[{"role": "user", "content": prompt}],
-        options={"temperature": 0}
-    )
-
-    return response["message"]["content"].strip()
-
-# Visualization detection
-def needs_visualization(question):
-    keywords = ["plot", "chart", "graph", "distribution", "trend", "visualize"]
-    return any(word in question.lower() for word in keywords)
 
 # Visualization
 def generate_visualization(df):
@@ -214,65 +172,6 @@ def build_value_hints(question):
 
     return hints
 
-# Text-to-SQL Query Generation
-def llama_text_to_sql(question):
-
-    value_hints = build_value_hints(question)
-
-    prompt = f"""
-You are an expert system that converts natural language questions into SQL.
-Schema:
-{SCHEMA_FULL}
-Distinct values hints based on question context:
-{value_hints}
-
-Important:
-Use column names EXACTLY as written in the SCHEMA_FULL that provided.
-
-If a column name is enclosed in double quotes, preserve the double quotes exactly in the generated SQL.
-Do not remove or change the capitalization of quoted identifiers.
-
-Do not invent or modify column names.
-If the question is unrelated to the dataset or cannot be answered using the schema,
-return: INVALID_QUERY
-
-Important Semantic Rules:
-- In this dataset, readmitted values are:
-  '<30' = readmitted within 30 days
-  '>30' = readmitted after 30 days
-  'NO' = not readmitted
-- When a question says "were readmitted", it means readmitted <> 'NO'.
-- If question asks for distribution, use GROUP BY and COUNT(*)
-
-Important SQL Behavior Rules:
-
-1. If user asks to list records or show patients,
-   use SELECT * with LIMIT.
-
-2. If user asks for distribution of a numeric column,
-   select that column directly (no COUNT or GROUP BY).
-
-3. If user asks for counts by category, use GROUP BY with COUNT(*).
-
-General Rules:
-- If using GROUP BY, include grouped column in SELECT.
-- Use COUNT(*) instead of COUNT(column).
-- Output ONLY valid PostgreSQL SQL.
-- End the query with a semicolon.
-
-Question:
-{question}
-
-SQL:
-"""
-    response = ollama.chat(
-        model="llama3.1:8b",
-        messages=[{"role": "user", "content": prompt}],
-        options={"temperature": 0}
-    )
-
-    return response["message"]["content"].strip()
-
 # fix SQL if GROUP BY without column in SELECT
 def fix_groupby_sql(sql):
 
@@ -301,30 +200,3 @@ def execute_sql(sql):
         return pd.read_sql(sql, engine)
     except:
         return None
-    
-# Hybrid Combination
-def handle_query(question):
-
-    intent = classify_intent(question)
-
-    if intent == "SQL":
-
-        sql = llama_text_to_sql(question)
-        sql = fix_groupby_sql(sql)
-        print("Generated SQL:", sql)
-
-        df = execute_sql(sql)
-
-        if df is None:
-            return "Invalid SQL generated. Please try rephrasing your question or state column names clearly."
-
-        elif needs_visualization(question):
-            return generate_visualization(df)
-
-        return df
-
-    elif intent == "PREDICTION":
-
-        return "Prediction and analytic report have been generated, please refer to the corresponding pages."
-    
-    return "⚠ The system could not process this query. Please try rephrasing."

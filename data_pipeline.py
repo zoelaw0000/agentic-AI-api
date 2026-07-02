@@ -221,7 +221,7 @@ def upload_and_process(file):
         "status": "success",
         "inserted_rows": len(df),
         "duplicates_removed": removed,
-        "Prediction_model_status": "Pre-trained model loaded.",
+        "prediction_model_status": "Pre-trained model loaded.",
 
         "high_risk_count": int(high_risk_count),
         "high_risk_rate": high_risk_rate,
