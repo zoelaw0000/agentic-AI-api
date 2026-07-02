@@ -4,7 +4,7 @@ import joblib
 
 MODEL_PATH = "readmitted_model_compressed.pkl"
 
-PREDICTION_THRESHOLD = 0.13
+PREDICTION_THRESHOLD = 0.50
 
 model = None
 
