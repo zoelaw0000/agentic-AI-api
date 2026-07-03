@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from data_pipeline import upload_and_process
 from analytics_engine import generate_analytics_report
 import config
-from hybrid_system_core import (build_value_hints, fix_groupby_sql, execute_sql, generate_visualization)
+from hybrid_system_core import (build_value_hints, fix_groupby_sql, execute_sql, generate_visualization, SCHEMA_FULL)
 
 engine = create_engine(config.DATABASE_URL)
 
@@ -63,6 +63,13 @@ def analytics():
 @app.post("/generate-insight")
 async def generate_insight(request: dict):
     return request
+
+@app.get("/schema")
+def get_schema():
+    return {
+        "status": "success",
+        "schema": SCHEMA_FULL
+    }
 
 class QuestionRequest(BaseModel):
     question: str
