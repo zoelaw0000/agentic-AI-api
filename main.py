@@ -28,8 +28,6 @@ async def process_data(file: UploadFile = File(...)):
 
     result = upload_and_process(file.file)
 
-    print(result)
-
     if result["status"] == "success":
 
         return {
@@ -37,12 +35,9 @@ async def process_data(file: UploadFile = File(...)):
             "inserted_rows": int(result["inserted_rows"]),
             "duplicates_removed": int(result["duplicates_removed"]),
             "prediction_model_status": result["prediction_model_status"],
-
             "high_risk_count": int(result["high_risk_count"]),
             "high_risk_rate": float(result["high_risk_rate"]),
-            "average_probability": float(result["average_probability"]),
-
-            "prediction_result": result["prediction_result"].to_dict(orient="records")
+            "average_probability": float(result["average_probability"])
         }
 
     return result
@@ -64,6 +59,22 @@ def analytics():
     report = generate_analytics_report(df)
 
     return report
+
+@app.get("/prediction-result")
+def prediction_result():
+
+    df = pd.read_sql(
+        "SELECT * FROM patient_predictions ORDER BY encounter_id",
+        engine
+    )
+
+    return {
+        "status": "success",
+        "data": df.where(
+            pd.notnull(df),
+            None
+        ).to_dict(orient="records")
+    }
 
 @app.post("/generate-insight")
 async def generate_insight(request: dict):
