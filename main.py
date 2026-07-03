@@ -28,6 +28,8 @@ async def process_data(file: UploadFile = File(...)):
 
     result = upload_and_process(file.file)
 
+    print(result)
+
     if result["status"] == "success":
 
         return {
