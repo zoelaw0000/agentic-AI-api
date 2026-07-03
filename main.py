@@ -60,6 +60,10 @@ def analytics():
 
     return report
 
+@app.post("/generate-insight")
+async def generate_insight(request: dict):
+    return request
+
 class QuestionRequest(BaseModel):
     question: str
 
