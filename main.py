@@ -35,9 +35,12 @@ async def process_data(file: UploadFile = File(...)):
             "inserted_rows": int(result["inserted_rows"]),
             "duplicates_removed": int(result["duplicates_removed"]),
             "prediction_model_status": result["prediction_model_status"],
+
             "high_risk_count": int(result["high_risk_count"]),
             "high_risk_rate": float(result["high_risk_rate"]),
-            "average_probability": float(result["average_probability"])
+            "average_probability": float(result["average_probability"]),
+
+            "prediction_result": result["prediction_result"].to_dict(orient="records")
         }
 
     return result
